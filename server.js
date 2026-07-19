@@ -6,24 +6,25 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-// Standard check to see if the server is up
-app.get('/', (req, res) => {
-    res.send('Game server is running perfectly!');
-});
+let gameState = { board: Array(9).fill(null), currentPlayer: 'X' };
 
 io.on('connection', (socket) => {
-    console.log(`Player connected: ${socket.id}`);
+    console.log('Player connected');
+    socket.emit('gameState', gameState);
 
-    // When a player sends a move, broadcast it to everyone else
-    socket.on('sendMove', (data) => {
-        socket.broadcast.emit('receiveMove', data);
+    socket.on('makeMove', (index) => {
+        if (gameState.board[index] === null) {
+            gameState.board[index] = gameState.currentPlayer;
+            gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
+            io.emit('gameState', gameState);
+        }
     });
 
-    socket.on('disconnect', () => {
-        console.log(`Player disconnected: ${socket.id}`);
+    socket.on('reset', () => {
+        gameState = { board: Array(9).fill(null), currentPlayer: 'X' };
+        io.emit('gameState', gameState);
     });
 });
 
-// Render gives your server a dynamic port automatically, or defaults to 8080
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`Server live on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
