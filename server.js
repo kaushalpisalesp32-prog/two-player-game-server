@@ -1,10 +1,14 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+
+// --- THIS LINE TELLS EXPRESS TO SERVE YOUR INDEX.HTML ---
+app.use(express.static(__dirname)); 
 
 let gameState = { board: Array(9).fill(null), currentPlayer: 'X' };
 
