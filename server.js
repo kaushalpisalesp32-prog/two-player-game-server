@@ -7,8 +7,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-// --- THIS LINE TELLS EXPRESS TO SERVE YOUR INDEX.HTML ---
+// Serve static files from the root directory
 app.use(express.static(__dirname)); 
+
+// EXPLICITLY ROUTE THE BASE URL TO YOUR INDEX.HTML
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 let gameState = { board: Array(9).fill(null), currentPlayer: 'X' };
 
