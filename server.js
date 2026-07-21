@@ -1,39 +1,24 @@
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
+const https = require('https');
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
 
-// Serve static files from the root directory
-app.use(express.static(__dirname)); 
-
-// EXPLICITLY ROUTE THE BASE URL TO YOUR INDEX.HTML
+// When anyone visits your Render URL (http://...onrender.com/)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-let gameState = { board: Array(9).fill(null), currentPlayer: 'X' };
-
-io.on('connection', (socket) => {
-    console.log('Player connected');
-    socket.emit('gameState', gameState);
-
-    socket.on('makeMove', (index) => {
-        if (gameState.board[index] === null) {
-            gameState.board[index] = gameState.currentPlayer;
-            gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
-            io.emit('gameState', gameState);
-        }
-    });
-
-    socket.on('reset', () => {
-        gameState = { board: Array(9).fill(null), currentPlayer: 'X' };
-        io.emit('gameState', gameState);
+    // Send a request to fetch Google's homepage from the server side
+    https.get('https://www.google.com', (googleRes) => {
+        // Forward Google's headers (content type, styles, etc.)
+        res.writeHead(googleRes.statusCode, googleRes.headers);
+        
+        // Pipe/stream Google's HTML directly back to your browser/app
+        googleRes.pipe(res);
+    }).on('error', (err) => {
+        console.error('Error fetching Google:', err);
+        res.status(500).send('Failed to load Google');
     });
 });
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server = app.listen(PORT, () => {
+    console.log(`Proxy server listening on port ${PORT}`);
+});
